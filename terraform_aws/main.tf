@@ -10,7 +10,6 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.18.1"
 
   name                 = "k8s-vpc"
   cidr                 = "172.16.0.0/16"
