@@ -1,0 +1,121 @@
+
+name: "Deploy K8s in AWS"
+
+on:
+  push:
+    paths:
+    - 'terraform_aws/**'
+    - '.github/workflows/TerraformAWS.yml'
+    branches:
+    - main
+  workflow_dispatch:
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  REPO: dmonakh/Wordpress-Tekton-atK8s-inAWS # Replace with you repo (user/repo).
+
+jobs:
+  terraform-CI:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform_aws
+
+    steps:
+     - name: Checkout code
+       uses: actions/checkout@v2
+
+     - name: Setup Terraform
+       uses: hashicorp/setup-terraform@v1
+       with:
+          terraform_version: latest
+          terraform_wrapper: false
+     
+     - name: Create bucket if dosn't exists
+       env:
+        SCRIPT_DIR: ${{ github.workspace }}/terraform_aws/scripts
+       run: bash  $SCRIPT_DIR/create-s3.sh
+
+     - name: Terraform Init
+       id: init
+       run: terraform init
+
+     - name: Terraform Plan
+       id: plan
+       run: terraform plan -lock=false -no-color
+
+     - name: Terraform Apply
+       if: "!contains(github.event.head_commit.message, 'destroy')"
+       run: terraform apply -auto-approve -lock=false
+
+     - name: Terraform Destroy
+       if: contains(github.event.head_commit.message, 'destroy')
+       run: terraform destroy -auto-approve -lock=false
+
+  terraform-CD:
+      needs: 
+        - terraform-CI
+      if: "!contains(github.event.head_commit.message, 'destroy') "
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: terraform_aws
+
+      steps:
+      - name: Clon Rep
+        uses: actions/checkout@v3
+
+      - name: Install and configure kubectl
+        run: |
+          VERSION=$(curl --silent https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+          curl https://storage.googleapis.com/kubernetes-release/release/$VERSION/bin/linux/amd64/kubectl \
+            --progress-bar \
+            --location \
+            --remote-name
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+  
+      - name: Get Kubeconfig
+        run: aws eks update-kubeconfig --region us-east-1 --name mondyk8awsklas
+
+      - name: Install Tekton
+        if: contains(github.event.head_commit.message, 'init')
+        env:
+          DOCKER_USERNAME : ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD : ${{ secrets.DOCKER_PASSWORD }}
+          SCRIPT_DIR: ${{ github.workspace }}/terraform_aws/scripts
+        run: bash  $SCRIPT_DIR/install-tekton.sh
+
+      - name: Wait for 60 seconds
+        if: contains(github.event.head_commit.message, 'init')
+        run: sleep 60s
+
+      - name: Create Webhook
+        if: contains(github.event.head_commit.message, 'init')
+        env:
+          SCRIPT_DIR: ${{ github.workspace }}/terraform_aws/scripts
+        run: |
+          external_ip=$(kubectl get svc ingress-nginx-controller -n ingress-nginx  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "External IP: $external_ip"
+          bash $SCRIPT_DIR/add-webhook.sh $external_ip
+      
+      - name: Create empty commit
+        if: contains(github.event.head_commit.message, 'init')
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git pull
+          git commit --allow-empty -m "Empty commit"
+          git push
+
+      - name: Wait for 5 minutes
+        run: sleep 300s
+
+      - name: Check Service
+        run: kubectl get service
