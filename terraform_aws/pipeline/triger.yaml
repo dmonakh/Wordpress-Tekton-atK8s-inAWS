@@ -1,3 +1,31 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: workspace-pv
+  labels:
+    type: local
+spec:
+  storageClassName: fast-disks
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/workspace/output"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: workspace-pvc
+spec:
+  storageClassName: fast-disks
+  volumeName: workspace-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
@@ -37,13 +65,8 @@ spec:
             value: v1
         workspaces:
           - name: workspace
-            volumeClaimTemplate:
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 2Gi   
+            persistentVolumeClaim:
+              claimName: workspace-pvc
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener

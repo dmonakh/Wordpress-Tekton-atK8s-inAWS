@@ -52,14 +52,14 @@ module "eks" {
   eks_managed_node_groups = {
   main = {
     desired_capacity = 2
-    max_capacity     = 2
-    min_capacity     = 0
+    max_capacity     = 10
+    min_capacity     = 2
 
     instance_type = "t3.medium"
+    capacity_type = "SPOT"
     }
   }
 }
-
 resource "aws_route53_zone" "dns" {
   name     = "it-sproutdevteam.fun"
 }
