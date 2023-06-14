@@ -50,9 +50,9 @@ module "eks" {
   enable_irsa = true
   eks_managed_node_groups = {
   main = {
-    desired_capacity = 2
-    max_capacity     = 10
-    min_capacity     = 2
+      min_size     = 2
+      max_size     = 10
+      desired_size = 2
 
     instance_type = "t3.medium"
     capacity_type = "SPOT"

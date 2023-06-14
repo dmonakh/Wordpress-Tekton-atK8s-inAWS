@@ -99,7 +99,7 @@ jobs:
         env:
           SCRIPT_DIR: ${{ github.workspace }}/terraform_aws/scripts
         run: |
-          external_ip=$(kubectl get svc ingress-nginx-controller -n ingress-nginx  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          external_ip=$(kubectl get svc ingress-nginx-controller -n ingress-nginx  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           echo "External IP: $external_ip"
           bash $SCRIPT_DIR/add-webhook.sh $external_ip
       
