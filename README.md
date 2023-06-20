@@ -139,7 +139,7 @@ To deploy WordPress with Tekton, follow these steps:
 
 After deploying the infrastructure using Terraform and GitHub Actions, you wait and check GitHub Action.
 
-After step `Create empty commit` the tekton pipeline will automatically create and configure the necessary resources for deploying WordPress in your AWS project. 
+After step `Get IP address` the tekton pipeline will automatically create and configure the necessary resources for deploying WordPress in your AWS project. 
 You can track the progress of the pipeline execution through the Tekton dashboard or the command line.  
 
 ### Optional:
