@@ -59,5 +59,3 @@ spec:
         - name: script  
           value: |
             kubectl apply -f https://raw.githubusercontent.com/dmonakh/Wordpress-Tekton-atK8s-inAWS/main/terraform_aws/Deploy.yml 
-
-            
