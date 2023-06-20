@@ -55,7 +55,7 @@ jobs:
      - name: Delete Webhook
        if: contains(github.event.head_commit.message, 'destroy')
        env:
-          SCRIPT_DIR: ${{ github.workspace }}/terraform_gcp/scripts
+          SCRIPT_DIR: ${{ github.workspace }}/terraform_aws/scripts
        run: |
           bash $SCRIPT_DIR/del-webhook.sh
 

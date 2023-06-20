@@ -139,7 +139,7 @@ To deploy WordPress with Tekton, follow these steps:
 
 After deploying the infrastructure using Terraform and GitHub Actions, you wait and check GitHub Action.
 
-After step `Get IP address` the tekton pipeline will automatically create and configure the necessary resources for deploying WordPress in your AWS project. 
+After step `Create empty commit` the tekton pipeline will automatically create and configure the necessary resources for deploying WordPress in your AWS project. 
 You can track the progress of the pipeline execution through the Tekton dashboard or the command line.  
 
 ### Optional:
@@ -150,7 +150,7 @@ Open: [Tekton Dashboard](http://127.0.0.1:9097/#/namespaces/default/pipelineruns
 
 ### Сonclusion: 
 
-If step `Check Service` in GitHub Action shows an external IP for WordPress and the link works, well done! 
+If step `Get IP address` in GitHub Action shows an external IP for WordPress and the link works, well done! 
 (Note: You can open this ip in your browser and get your site. But the display of the site will not be correct until you connect the domain)
 
 After that, you need to create an A record in your registered Domain and wait about for 72 hours to check if the site works for your Domain.  
